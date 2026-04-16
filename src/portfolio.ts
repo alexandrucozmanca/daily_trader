@@ -9,4 +9,4 @@ export const portfolio: Asset[] = [
   { symbol: "VWCE.DE", type: "etf", quantity: 7.63, avgBuyPrice: 151.66 }
 ];
 
-export const watchlist: string[] = ["NVDA", "MSFT", "ETH"];
+export const watchlist: string[] = [];
