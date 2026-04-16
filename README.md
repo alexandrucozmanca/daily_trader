@@ -1,12 +1,12 @@
 # Daily Market Tracker & AI Recommendation System
 
-A TypeScript-based daily market tracker that fetches asset prices, sends data to the Claude API for analysis, and emails you a daily buy/sell/hold recommendation. Runs automatically via GitHub Actions.
+A TypeScript-based daily market tracker that fetches asset prices, discovers trending assets via Claude's web search, and emails you a daily buy/sell/hold recommendation. Runs automatically via GitHub Actions.
 
 ## Prerequisites
 
 - Node.js 20+
 - GitHub account (for Actions scheduling)
-- [Alpha Vantage API key](https://www.alphavantage.co/support/#api-key) (free tier)
+- [Twelve Data API key](https://twelvedata.com/) (free tier)
 - [Anthropic API key](https://console.anthropic.com/)
 - Gmail account with an App Password
 
@@ -28,7 +28,7 @@ A TypeScript-based daily market tracker that fetches asset prices, sends data to
    cp .env.example .env
    ```
 
-4. Fill in your API keys and email credentials in `.env`.
+4. Fill in your API keys, email credentials, and portfolio in `.env`.
 
 5. Run locally:
    ```bash
@@ -37,17 +37,28 @@ A TypeScript-based daily market tracker that fetches asset prices, sends data to
 
 ## Configure Your Portfolio
 
-Edit `src/portfolio.ts` to match your actual holdings:
+Your portfolio is defined via the `PORTFOLIO_JSON` environment variable. Set it in your `.env` file or as a GitHub Actions secret:
 
-```typescript
-export const portfolio: Asset[] = [
-  { symbol: "VOO",  type: "etf",    quantity: 1,    avgBuyPrice: 480 },
-  { symbol: "AAPL", type: "stock",  quantity: 2,    avgBuyPrice: 170 },
-  { symbol: "BTC",  type: "crypto", quantity: 0.01, avgBuyPrice: 55000 },
-];
-
-export const watchlist: string[] = ["NVDA", "MSFT", "ETH"];
+```json
+[
+  {"symbol": "VOO",  "type": "etf",    "quantity": 1,    "avgBuyPrice": 480},
+  {"symbol": "AAPL", "type": "stock",  "quantity": 2,    "avgBuyPrice": 170},
+  {"symbol": "BTC",  "type": "crypto", "quantity": 0.01, "avgBuyPrice": 55000}
+]
 ```
+
+The app will fail on startup if `PORTFOLIO_JSON` is missing or empty.
+
+## Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `TWELVE_DATA_API_KEY` | API key from [Twelve Data](https://twelvedata.com/) |
+| `ANTHROPIC_API_KEY` | API key from [Anthropic](https://console.anthropic.com/) |
+| `PORTFOLIO_JSON` | JSON array of your holdings (see above) |
+| `EMAIL_FROM` | Gmail address to send from |
+| `EMAIL_TO` | Recipient email address |
+| `EMAIL_PASSWORD` | Gmail App Password (not your real password) |
 
 ## Gmail App Password Setup
 
@@ -64,8 +75,9 @@ export const watchlist: string[] = ["NVDA", "MSFT", "ETH"];
 2. Go to your repo's **Settings** > **Secrets and variables** > **Actions**
 
 3. Add these repository secrets:
-   - `ALPHA_VANTAGE_API_KEY`
+   - `TWELVE_DATA_API_KEY`
    - `ANTHROPIC_API_KEY`
+   - `PORTFOLIO_JSON`
    - `EMAIL_FROM`
    - `EMAIL_TO`
    - `EMAIL_PASSWORD`
@@ -74,13 +86,9 @@ export const watchlist: string[] = ["NVDA", "MSFT", "ETH"];
 
 5. To test manually: go to **Actions** > **Daily Market Tracker** > **Run workflow**
 
-## Alpha Vantage Free Tier Limits
+## How It Works
 
-The free tier allows **25 API requests per day** and **500 per month**. Each symbol in your portfolio and watchlist uses one request. With the default configuration (3 portfolio + 3 watchlist = 6 symbols), you're well within limits.
-
-If your portfolio + watchlist exceeds 20 symbols, the tracker will log a warning. Consider:
-- Reducing the number of tracked symbols
-- Upgrading to an Alpha Vantage premium plan
-- Splitting symbols across multiple days
-
-Note: there is a 12-second delay between API requests to respect rate limits.
+1. **Fetch market data** — pulls quotes from [Twelve Data](https://twelvedata.com/) for your portfolio and watchlist. Supports US stocks, European tickers (e.g. `VWCE.DE`), and crypto.
+2. **Discover assets** — asks Claude (with web search) to find 3-5 trending assets worth watching. Assets already in your portfolio or watchlist are not re-fetched.
+3. **Analyze** — sends all data to Claude for a plain-language daily briefing with buy/sell/hold verdicts and new asset recommendations.
+4. **Email** — delivers the briefing to your inbox.
