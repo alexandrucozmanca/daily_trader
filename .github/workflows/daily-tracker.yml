@@ -8,6 +8,7 @@ on:
 jobs:
   run-tracker:
     runs-on: ubuntu-latest
+    environment: trader
     steps:
       - uses: actions/checkout@v4
 
