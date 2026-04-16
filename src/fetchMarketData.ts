@@ -59,7 +59,6 @@ async function fetchQuote(
     });
 
     const data = response.data;
-    console.log(`[DEBUG] ${symbol}:`, JSON.stringify(data, null, 2)); // TODO: remove
     if (data.code === 400 || data.status === "error" || !data.close) {
       console.warn(`No data returned for ${symbol}`);
       return null;

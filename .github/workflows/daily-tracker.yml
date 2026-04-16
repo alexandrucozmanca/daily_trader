@@ -31,4 +31,5 @@ jobs:
           EMAIL_TO: ${{ secrets.EMAIL_TO }}
           EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
           TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
+          PORTFOLIO_JSON: ${{ secrets.PORTFOLIO_JSON }}
         run: npm start
