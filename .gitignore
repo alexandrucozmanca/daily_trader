@@ -1,0 +1,10 @@
+/node_modules/
+/dist/
+/.claude/settings.local.json
+/.idea/market_trader.iml
+/.idea/misc.xml
+/.idea/modules.xml
+/.idea/vcs.xml
+/.env
+/MARKET_TRACKER_SPEC.md
+/package-lock.json
