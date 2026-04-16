@@ -5,8 +5,6 @@ export interface Asset {
   avgBuyPrice: number;
 }
 
-export const portfolio: Asset[] = [
-  { symbol: "VWCE.DE", type: "etf", quantity: 7.63, avgBuyPrice: 151.66 }
-];
+export const portfolio: Asset[] = JSON.parse(process.env.PORTFOLIO_JSON || "[]");
 
 export const watchlist: string[] = [];
