@@ -119,22 +119,31 @@ export async function analyzeWithClaude(
   const client = new Anthropic({ apiKey });
   const userPrompt = buildUserPrompt(assets, snapshots, discovered, discoverySnapshots);
 
-  try {
-    const message = await client.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 1024,
-      system: SYSTEM_PROMPT,
-      messages: [{ role: "user", content: userPrompt }],
-    });
+  const maxRetries = 3;
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const message = await client.messages.create({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1024,
+        system: SYSTEM_PROMPT,
+        messages: [{ role: "user", content: userPrompt }],
+      });
 
-    const textBlock = message.content.find((block) => block.type === "text");
-    if (!textBlock || textBlock.type !== "text") {
-      throw new Error("No text response received from Claude");
+      const textBlock = message.content.find((block) => block.type === "text");
+      if (!textBlock || textBlock.type !== "text") {
+        throw new Error("No text response received from Claude");
+      }
+      return textBlock.text;
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      if (msg.includes("429") && attempt < maxRetries) {
+        const waitSec = attempt * 60;
+        console.warn(`Rate limited (attempt ${attempt}/${maxRetries}), waiting ${waitSec}s...`);
+        await new Promise((resolve) => setTimeout(resolve, waitSec * 1000));
+        continue;
+      }
+      throw new Error(`Claude API error: ${msg}`);
     }
-    return textBlock.text;
-  } catch (error) {
-    throw new Error(
-      `Claude API error: ${error instanceof Error ? error.message : error}`
-    );
   }
+  throw new Error("Claude API error: max retries exceeded");
 }

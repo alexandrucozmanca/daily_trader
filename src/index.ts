@@ -39,6 +39,10 @@ async function main() {
   );
   discoverySnapshots = [...discoverySnapshots, ...reusedSnapshots];
 
+  // Wait for rate limit window to reset between discovery and analysis calls
+  console.log("Waiting 60s for rate limit cooldown...");
+  await new Promise((resolve) => setTimeout(resolve, 60000));
+
   console.log("Requesting Claude analysis...");
   const analysis = await analyzeWithClaude(portfolio, snapshots, discovered, discoverySnapshots);
 

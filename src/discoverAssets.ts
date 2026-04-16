@@ -36,6 +36,12 @@ function parseDiscoveryResponse(text: string): DiscoveredAsset[] {
     cleaned = fenceMatch[1].trim();
   }
 
+  // Extract the first JSON array from the string (first '[' to last ']')
+  const arrayMatch = cleaned.match(/\[[\s\S]*\]/);
+  if (arrayMatch) {
+    cleaned = arrayMatch[0];
+  }
+
   const parsed = JSON.parse(cleaned);
   if (!Array.isArray(parsed)) {
     throw new Error("Expected a JSON array");
@@ -87,10 +93,12 @@ export async function discoverAssets(
 
     return parseDiscoveryResponse(textBlock.text);
   } catch (error) {
-    console.error(
-      "Asset discovery failed:",
-      error instanceof Error ? error.message : error
-    );
+    const msg = error instanceof Error ? error.message : String(error);
+    // Rate limit errors should stop the whole run since analysis will also fail
+    if (msg.includes("429")) {
+      throw new Error(`Asset discovery rate limited: ${msg}`);
+    }
+    console.error("Asset discovery failed:", msg);
     return [];
   }
 }
