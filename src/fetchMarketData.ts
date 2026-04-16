@@ -59,8 +59,7 @@ async function fetchQuote(
     });
 
     const data = response.data;
-    // TODO: remove debug log
-    if (fetchQuote.debugOnce) { console.log(`[DEBUG] Raw Twelve Data response for ${symbol}:`, JSON.stringify(data, null, 2)); fetchQuote.debugOnce = false; }
+    console.log(`[DEBUG] ${symbol}:`, JSON.stringify(data, null, 2)); // TODO: remove
     if (data.code === 400 || data.status === "error" || !data.close) {
       console.warn(`No data returned for ${symbol}`);
       return null;
@@ -82,7 +81,6 @@ async function fetchQuote(
     return null;
   }
 }
-fetchQuote.debugOnce = true; // TODO: remove debug flag
 
 export async function fetchMarketData(
   assets: Asset[],
